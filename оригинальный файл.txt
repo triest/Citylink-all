@@ -1,0 +1,38 @@
+      if ($('input[name=send_managers]').is(':checked')) {
+                    $(this).data('event', 'to:step_4_2');
+                }
+                else if ((input = $(document).find('#technical_possibility')) && input.val() == 1) {
+                    if (a) {
+                        setTimeout(function () {
+                            if ($('.endContent').is(':hidden')) {
+                                handler.magic_key      = '{$steps_assistant_key}';
+                                if(handler.moving) {
+                                    Object.assign(handler.hold, handler.moving)
+                                }
+                                if(handler.dormitory) {
+                                    Object.assign(handler.hold, handler.dormitory)
+                                }
+
+                                localStorage.setItem(handler.magic_key, JSON.stringify(handler.hold))
+
+                                handler.hold = {}
+
+                               if (!$('#wizzard').attr("src")) {
+                                    $('#wizzard').attr("src", a + '?key=' + handler.magic_key);
+                                    $('#wizzard').show();
+                                } else {
+                                    parent.document.getElementById('wizzard').contentWindow.location.reload();
+                                    $('#wizzard').show();
+                                }
+                            }
+                        }, 500);
+                        $(this).data('event', 'to:step_4_1');
+                                       } else {
+                        $(this).data('event', 'to:step_4_3');
+                                       }
+                }
+                else {
+                    $(this).data('event', 'to:step_4_3');
+                }
+
+                handler.do_action($(this));

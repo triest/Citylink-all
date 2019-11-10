@@ -1,0 +1,213 @@
+<?php
+
+
+$folder = 'support';
+require_once '/srv/www/vhosts/drevlanka.ru/work/userscontrol/init.php';
+require_once('/srv/www/vhosts/drevlanka.ru/work/include/config.inc.php');
+require_once('/srv/www/vhosts/drevlanka.ru/work/bootstrap.php');
+global $db_link;
+header('Content-Type: application/json');
+
+$seach = $_POST['seach'];
+
+
+$json = true;
+$user = $_POST['user'];
+if ($user == null) {
+    $user = "184021";
+}
+
+#$seach = "%" . $seach . "%";
+$seach = mysql_real_escape_string($seach);
+$seach1 = $seach;
+#$seach1 = "*" . $seach . "*";
+
+# работающее, не полный поиск
+#$result = $support->query('select * from support_log WHERE (MATCH (description) AGAINST (?s) or support=?s) and login=?s order by DATE DESC',
+#      $seach1, $seach, $user);#
+#полный поиск
+
+# запрос по дискрипшину
+$result = $support->query('select * from support_logTest WHERE (MATCH (description) AGAINST (?s) or support=?s) and login=?s order by DATE DESC',
+        $seach1, $seach, $user);
+
+$output_array = array();
+
+$type_array = array();
+$support_array = array();
+$description_array = array();
+$ip_array = array();
+while ($row = $support->Fetch($result)) {
+    /* var_dump($row);
+     die();*/
+    $description_array[] = array(
+            'id' => $row['id'],
+            'date' => $row['date'],
+            'ipaddr' => iconv('koi8-r', 'utf-8', $row['ipaddr']),
+            'login' => $row['login'],
+            'type' => iconv('koi8-r', 'utf-8', $row['type']),
+            'description' => iconv('koi8-r', 'utf-8', $row['description']),
+            'support' => $row['support'],
+            'pinned' => $row['pinned'],
+    );
+}
+
+
+# запрос по ссаппорту
+$result = $support->query('select * from support_logTest WHERE (MATCH (support) AGAINST (?s) or support=?s) and login=?s order by DATE DESC',
+        $seach1, $seach, $user);
+
+
+while ($row = $support->Fetch($result)) {
+    /* var_dump($row);
+     die();*/
+    $support_array[] = array(
+            'id' => $row['id'],
+            'date' => $row['date'],
+            'ipaddr' => iconv('koi8-r', 'utf-8', $row['ipaddr']),
+            'login' => $row['login'],
+            'type' => iconv('koi8-r', 'utf-8', $row['type']),
+            'description' => iconv('koi8-r', 'utf-8', $row['description']),
+            'support' => $row['support'],
+            'pinned' => $row['pinned'],
+    );
+}
+
+#запрос по тайпу
+$result = $support->query('select * from support_logTest WHERE (MATCH (type) AGAINST (?s) or support=?s) and login=?s order by DATE DESC',
+        $seach1, $seach, $user);
+
+
+while ($row = $support->Fetch($result)) {
+    $type_array[] = array(
+            'id' => $row['id'],
+            'date' => $row['date'],
+            'ipaddr' => iconv('koi8-r', 'utf-8', $row['ipaddr']),
+            'login' => $row['login'],
+            'type' => iconv('koi8-r', 'utf-8', $row['type']),
+            'description' => iconv('koi8-r', 'utf-8', $row['description']),
+            'support' => $row['support'],
+            'pinned' => $row['pinned'],
+    );
+}
+
+#по ip
+$result = $support->query('select * from support_logTest WHERE (MATCH (ipaddr) AGAINST (?s) or support=?s) and login=?s order by DATE DESC',
+        $seach1, $seach, $user);
+
+
+while ($row = $support->Fetch($result)) {
+    $ip_array[] = array(
+            'id' => $row['id'],
+            'date' => $row['date'],
+            'ipaddr' => iconv('koi8-r', 'utf-8', $row['ipaddr']),
+            'login' => $row['login'],
+            'type' => iconv('koi8-r', 'utf-8', $row['type']),
+            'description' => iconv('koi8-r', 'utf-8', $row['description']),
+            'support' => $row['support'],
+            'pinned' => $row['pinned'],
+            'source' => 'source'
+    );
+}
+
+
+$output_array = array_merge($description_array, $support_array);
+
+$output_array = array_merge($output_array, $type_array);
+
+$output_array = array_merge($output_array, $ip_array);
+
+$second_array = array();
+// ?????? #2
+/* old
+$result = $support->query('select log.id,user.login,log.ipaddr,log.source,log.comment,log.date_added
+		from billing.users user
+        left join billing.stats_log log
+        on user.contract_id=log.contract_id
+        where
+         log.comment like ?s and user.login=?s',
+        $seach, $user);
+*/
+/*
+$result = $support->query('select *
+		from billing.users user 
+        left join billing.stats_log sl on user.contract_id=sl.contract_id 
+        LEFT JOIN billing.stats_log_types st ON st.`type` = sl.`type`',
+        $seach, $user);
+*/
+/*
+$result = $support->query(' select *
+		from billing.users user 
+        left join billing.stats_log sl on user.contract_id=sl.contract_id 
+        LEFT JOIN billing.stats_log_types st ON st.`type` = sl.`type`
+        where 
+           (MATCH (sl.comment) AGAINST (?s))
+            and
+         login=?s ',
+         $seach,$user);
+*/
+
+$result = $support->query('select *
+		from billing.users user 
+        left join billing.stats_log sl on user.contract_id=sl.contract_id 
+        LEFT JOIN billing.stats_log_types st ON st.`type` = sl.`type`
+        where 
+           sl.contract_id=?i and
+          sl.comment like ?s
+         order by sl.date_added desc;   ',
+        $user, $seach);
+
+
+while ($row = $support->Fetch($result)) {
+    $second_array[] = array(
+            'id' => $row['id'],
+            'date' => $row['date_added'],
+            'ipaddr' => $row['ipaddr'],
+            'login' => iconv('koi8-r', 'utf-8', $row['login']),
+        /*'type' => iconv('koi8-r', 'utf-8', $row['source']),*/
+            'type' => iconv('koi8-r', 'utf-8', $row['name']),
+            'description' => iconv('koi8-r', 'utf-8', $row['comment']),
+            'support' => iconv('koi8-r', 'utf-8', $row['source']),
+        //    'sourse' => iconv('koi8-r', 'utf-8', $row['source']),
+            'pinned' => 'pinned',
+    );
+}
+
+$result_array = array_merge($output_array, $second_array);
+
+$yellow_array = array();
+
+/*for yellow*/
+$result = $support->query('SELECT *
+		FROM
+			billing.`stats_log` sl
+				LEFT JOIN billing.`stats_log_types` st ON st.`type` = sl.`type`
+                 where sl.contract_id=?s
+                 and (name like ?s or ipaddr like ?s)
+                 order by date_added desc
+                 ;',
+        $user, $seach, $seach);
+
+while ($row = $support->Fetch($result)) {
+
+    $yellow_array[] = array(
+            'id' => $row['id'],
+            'date' => $row['date_added'],
+            'type' => $row['type'],
+            'description' => iconv('koi8-r', 'utf-8', $row['name']),
+            'ipaddr' => $row['ipaddr'],
+            'support' => iconv('koi8-r', 'utf-8', $row['source']),
+            'login' => iconv('koi8-r', 'utf-8', $row['name']),
+            'pinned' => $row['alias']
+    );
+}
+
+
+
+$result_array = array_merge($output_array, $yellow_array);
+
+//терерь надо упорядочить по убыванию даты
+
+
+
+echo json_encode($result_array);

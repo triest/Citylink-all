@@ -1,0 +1,897 @@
+<style>
+    .log {
+        margin: 5px;
+        width: 900px;
+        border: 1px solid;
+        text-align: left;
+    }
+
+    .log :first-child {
+        text-align: center;
+    }
+
+    .hardwareLog {
+        color: #00529B;
+        background-color: #BDE5F8;
+    }
+
+    .innerLog {
+        color: red;
+        background-color: #FFBABA;
+    }
+</style>
+
+
+<script>
+    $(function () {
+        {if getset('addplan') && server('HTTP_REFERER') && !preg_match('/support.*module=user/', server('HTTP_REFERER'))}
+        $('#add_plan').trigger('click');
+        {elseif getset('client_delete') && server('HTTP_REFERER') && !preg_match('/support.*module=user/', server('HTTP_REFERER'))}
+        $('.client-delete[data-type=1]').trigger('click');
+        {/if}
+
+        {*{literal}*}
+        {*if($('div').is('.error')){*}
+        {*$div = $('div.inside-msg');*}
+        {*$div.append('<span class="js-link im-hide" style="cursor: pointer; position: relative; top: -'+($div.height() + 20)/2+'px; float: right;">Неактуально?</span>');*}
+
+        {*$('.im-hide').live('click', function(){*}
+        {*var message = 'Убрать это сообщение с главной страницы договора? Cообщение останется в логах по клиенту.';*}
+        {*if ( ! confirm(message)) {*}
+        {*return;*}
+        {*}*}
+        {*$.post('/work2/ajax/unpin/' + $div.data('msg_id'), {}, function(json){*}
+        {*if(json.result != 'ok') {*}
+        {*alert("Не удалось открепить сообщение");*}
+        {*}*}
+        {*else {*}
+        {*window.location.reload();*}
+        {*}*}
+        {*}, 'json');*}
+        {*});*}
+        {*}*}
+        {*{/literal}*}
+    });
+</script>
+
+{if $config.login == 'rykusov'}
+    <style>
+        table .worktable {
+            width: 90%;
+        }
+    </style>
+{/if}
+
+<div id="back" class="back" title="Перейти к учетной записи клиента"><img
+            src="/work/support/support/img/ArrowRight.png"></div>
+
+<input type="hidden" id="module" value="user">
+<input type="hidden" id="user" value="{$data.user}">
+<input type="hidden" id="contract_id" value="{$data.info.contract_id}">
+<input type="hidden" id="payment" value="{$data.info.payment}">
+
+<center>
+    {if $data.info.multi}<h2 style="color: red;">Мультиучётка</h2>{/if}
+
+    {if $data.newbies_id}
+        <div style="width: 90%;">
+            <p align="left"><span class="js-link"
+                                  onclick="javascript: window.open('/work/newbies/?id={$data.newbies_id}');"><small>Заявка на подключение</small></span>
+            </p>
+        </div>
+    {/if}
+
+    <table class="worktable" width="90%">
+        <tr>
+            <th width="20%">Клиент</th>
+            <th width="30%">Адрес</th>
+            <th></th>
+        </tr>
+        <tr>
+            <td align="center">{preg_replace('/&amp;/', '&', $data.info.name) nofilter}</td>
+            <td align="center">{$data.info.address}</td>
+            <td align="center">
+                {if $config.access.plan}<span class="js-link" id="add_plan">Отправить специалиста</span>| {/if}
+                <!-- <a href="./?module=add&type=user&user={$data.user}">Добавить проблему</a> |  -->
+                <a href="/work/support/index.php?section=add&phone={if !empty($data.info.phone_best)}{$data.info.phone_best}{else}-{/if}&nickname={$data.info.login}&name={$data.info.name}">Добавить
+                    запись</a> |
+                <a href="/work/failures/?add&login={$data.info.login}&city={$data.info.city_key}">Добавить аварию</a> |
+                <a href="/work/newbies/?section=add&cityLink={$data.info.city_key}&nickname={$data.info.login}">Добавить
+                    переезд</a> |
+                <a target="_blank" href="/work/business_control/?module=add_record">Что-то пошло не так</a>
+
+                <hr class="w100" style="margin-top: 10px;">
+                <span class="js-link client-delete" data-type="1">Расторгнуть, уважительная причина</span> |
+                <span class="js-link client-delete"
+                      data-type="2">Расторгнуть, но передать вначале в КО для удержания</span> <br/> <br/>
+                <a href="#" id="assistant_ko">Открыть помощник "Акции и сертификаты"</a>
+                {literal}
+                    <script>
+                        $('#assistant_ko').click(function () {
+                            var newWinValue = new Date().getTime();
+                            var newWin = window.open('/work2/steps_assistant#/widget/type/67/assistant/138', 'widget' + newWinValue, 'width=533,height=600,left=450,top=150 resizable=true');
+                            return false;
+                        });
+                    </script>
+                {/literal}
+                <br/>
+                <a href="/work/client_service/add.php?from_login={$data.info.login}" target="_blank"
+                   style="float: right; margin-right: 40px; background: #7DA7D9; padding: 5px; white-space: nowrap; margin: 15px 0px 0px; color: white;  text-decoration: none; font-size: 10px;">Создать
+                    запись в Клиент. Отдел</a><br/>
+            </td>
+        </tr>
+    </table>
+
+    {if isset($data.client_hardware_info) && count($data.client_hardware_info)}
+        <table width="90%">
+            <tr>
+                <td>
+                    <div class="info">
+                        <b>{$data.client_hardware_info.type}:</b>
+                        {$data.client_hardware_info.description}
+                        <hr style="with: 100%;">
+                        <div style="font-size: 7pt;"><i>Данный комментарий оставляют специалисты при регистрации
+                                клиента. К примеру, если состояние клиентского оборудования плохое, то вызовы для
+                                клиента будут платными. Заранее предупредите клиента о платности вызова и
+                                диагностики!</i></div>
+                    </div>
+                </td>
+            </tr>
+        </table>
+    {/if}
+
+    {$data.pinned nofilter}
+    {*{if isset($data.pinned) && count($data.pinned)}*}
+    {*<table class="pinned">*}
+    {*{foreach $data.pinned as $pinned}*}
+    {*<tr>*}
+    {*<td>*}
+    {*{substr($pinned.date, 0, 10)} / <b>{$pinned.description}</b> (<i>{getUserName($pinned.support)}</i>)*}
+    {*</td>*}
+    {*<td align="right">*}
+    {*<span title="Нажмите если запись не актуальна, и она не будет отображаться на видных местах." class="js-link pin" data-id="{$pinned.id}" data-pinned="{$pinned.pinned}">открепить</span>*}
+    {*</td>*}
+    {*</tr>*}
+    {*{/foreach}*}
+    {*</table>*}
+    {*{/if}*}
+
+    {if $data.in_cs}
+        <table width="90%">
+            <tr>
+                <td>
+                    <div class="white-window"><b>C клиентом &nbsp;<a
+                                    href="https://karelia.pro/work/client_service/?contract_id={$data.info.contract_id}"
+                                    target="_blank">Работает клиентский отдел</a> . ОБЯЗАТЕЛЬНО перейдите к записи по
+                            ссылке и решите открытые вопросы <a
+                                    href="https://karelia.pro/work/wiki/Абонентский_отдел_(вы_мне_звонили)"
+                                    target="_blank">[?]</a></b><br></div>
+                </td>
+            </tr>
+        </table>
+    {/if}
+
+    <h4>Записи:</h4>
+    <table class="worktable" width="80%" {if !$data.MSIE}id="tablesorter_pager"{/if}>
+        <thead>
+        <tr class="row-head">
+            <th>#</th>
+            {*<th>Запись</th>*}
+            <th>Запись для</th>
+            <th>Тех. специалист</th>
+            <th>Решена</th>
+            <th>Запись живет(ч.)</th>
+            <th>Отправил</th>
+            <th>Дата напоминания</th>
+        </tr>
+        </thead>
+        {if isset($data.troubles) && count($data.troubles)}
+            <tbody class="hover click" id="troubles_tbody">
+            {foreach $data.troubles as $key}
+                <tr id="trouble_id{$key.id}">
+                    <td align="center" id="not-link"><a href="/work/support/?id={$key.id}">{$key.id}</a></td>
+                    {*<td>
+                        {if strlen($config.problem_short.{$key.problem_short}) > 10 && false}
+                            <span title="{$config.problem_short.{$key.problem_short}}">{substr($config.problem_short.{$key.problem_short}, 0, 10)}...</span>
+                        {else}
+                            {$config.problem_short.{$key.problem_short}}
+                        {/if}
+                    </td>*}
+                    <td>{$config.problem_for.{$key.problem_for}}</td>
+                    <td>{$key.problem_for_login}</td>
+                    <td>{if $key.solved == 1}
+                            <span style="color: green;">Да</span>
+                        {else}
+                            <span style="color: red;">Нет</span>
+                        {/if}</td>
+                    <td>{if isset($key.live)}{$key.live}{/if}</td>
+                    <td>{$key.posted_by}</td>
+                    <td>
+                        {if $key.alert_date == 2147483647 || $key.alert_date == 0}
+                            -
+                        {else}
+                            {date('d.m.Y', $key.alert_date)}
+                            {if date('H:i', $key.alert_date) != '00:00'}
+                                {date('H:i', $key.alert_date)}
+                            {/if}
+                        {/if}
+                    </td>
+                </tr>
+            {/foreach}
+            </tbody>
+        {else}
+            <tr class="catside">
+                <td colspan="8">Записей не найдено.</td>
+            </tr>
+        {/if}
+    </table>
+
+    {if !$data.MSIE}
+        {if isset($data.troubles) && count($data.troubles)}
+            <center>
+                <div id="pager_troubles" class="pager">
+                    <form class="pager-form">
+                        <img src="./js/pager/icons/first.png" class="first"><img src="./js/pager/icons/prev.png"
+                                                                                 class="prev">
+                        <input type="text" class="pagedisplay" disabled>
+                        <img src="./js/pager/icons/next.png" class="next"><img src="./js/pager/icons/last.png"
+                                                                               class="last">
+                        <input type="hidden" class="pagesize" value="" id="troubles_size">
+                    </form>
+                </div>
+            </center>
+        {/if}
+    {/if}
+    <div id="sok_troubles"></div>
+
+
+    {*<div style="width:400px">*}
+    {*<table class="paginated" id="myTable">*}
+    {*<thead>*}
+    {*<tr>*}
+    {*<th class="col">A</th>*}
+    {*<th class="col">B</th>*}
+    {*</tr>*}
+    {*</thead>*}
+    {*<tbody>*}
+    {*</tbody>*}
+
+    {*</table>*}
+    {*</div>*}
+
+    <div style="width:60%">
+        <h4>Замеры скорости:</h4>
+        <table class="worktable paginated" id="speedtests">
+            <thead>
+            <tr>
+                <th>#</th>
+                <th>Дата</th>
+                <th>IP-адрес</th>
+                <th>download</th>
+                <th>upload</th>
+            </tr>
+            </thead>
+            <tr class="catside">
+                <td colspan="5"><img src="/work/images/loading_bar.gif"></td>
+            </tr>
+        </table>
+    </div>
+
+
+    <h4>Последние аварии и плановые работы:</h4>
+    <table class="worktable" width="60%" id="failures_table">
+        <tr>
+            <th>#</th>
+            <th>Дата</th>
+            <th>Источник</th>
+            <th>Краткое описание</th>
+            <th>Время решения</th>
+            <th>Устранена</th>
+        </tr>
+        <tbody class="hover click" id="failures_tbody">
+        <tr class="catside">
+            <td colspan="6"><img src="/work/images/loading_bar.gif"></td>
+        </tr>
+        </tbody>
+    </table>
+
+    <h4>IPTV аварии и плановые работы:</h4>
+    <table class="worktable" width="60%" id="failures_iptv_table">
+        <tr>
+            <th>#</th>
+            <th>Дата</th>
+            <th>Каналы</th>
+            <th>Краткое описание</th>
+            <th>Время решения</th>
+            <th>Устранена</th>
+        </tr>
+        <tbody class="hover click" id="failures_iptv_tbody">
+        <tr class="catside">
+            <td colspan="6"><img src="/work/images/loading_bar.gif"></td>
+        </tr>
+        </tbody>
+    </table>
+
+    {*<h4>Merged troubles:</h4>*}
+    {*<table class="worktable" width="60%" id="entrances_troubles_table">*}
+    {*<tr>*}
+    {*<th>#</th>*}
+    {*<th>Дата</th>*}
+    {*<th>Тип</th>*}
+    {*<th>Комментарий</th>*}
+    {*<th>Статус</th>*}
+    {*</tr>*}
+    {*<tr>*}
+    {*<th>#</th>*}
+    {*<th>Дата</th>*}
+    {*<th>Источник</th>*}
+    {*<th>Краткое описание</th>*}
+    {*<th>Время решения</th>*}
+    {*<th>Устранена</th>*}
+    {*</tr>*}
+    {*<tbody class="hover click" id="entrances_troubles_tbody">*}
+    {*<tr class="catside">*}
+    {*<td colspan="6"><img src="/work/images/loading_bar.gif"></td>*}
+    {*</tr>*}
+    {*</tbody>*}
+    {*</table>*}
+
+    {if (isset($data.hardware) && count($data.hardware)) || (isset($data.hardware_network) && count($data.hardware_network))}
+        <h4>Установленное оборудование:</h4>
+        <table class="worktable" width="60%">
+            <tr>
+                <th>#</th>
+                <th>Дата установки</th>
+                <th>Наименование</th>
+                <th>Серийный номер</th>
+                <th>Установлено сотрудником</th>
+                <th>Статус</th>
+            </tr>
+            <tbody class="hover click" id="hardware_tbody">
+            {foreach $data.hardware as $key}
+                <tr id="trouble_id{$key.id}">
+                    <td align="center"><a target="_blank" href="/work/hardware/?id={$key.id}">{$key.id}</a></td>
+                    <td>{$key.sell_date}</td>
+                    <td>{$key.name}</td>
+                    <td>{if $key.serial_number}{$key.serial_number}{else}-{/if}</td>
+                    <td>{if !empty($key.sell_by_fio)}{$key.sell_by_fio}{else}{$key.sell_by}{/if}</td>
+                    <td>
+                        <span {if in_array($key.status, array(2,7))}style="color: green;"
+                              {else}style="color: red;"{/if}>{$config.hardware_statuses.{$key.status}}</span>
+                    </td>
+                </tr>
+            {/foreach}
+            {foreach $data.hardware_network as $key}
+                <tr id="trouble_idnetwork_{$key.id}">
+                    <td align="center"><a target="_blank" href="/work/hardware/?id=network_{$key.id}">{$key.id}</a></td>
+                    <td>{$key.date_added}</td>
+                    <td>{$key.model.name}</td>
+                    <td>{if $key.serial}{$key.serial}{else}-{/if}</td>
+                    <td>{$key.user.username}</td>
+                    <td>
+                        <span style="color: green;">Установлено</span>
+                    </td>
+                </tr>
+            {/foreach}
+            </tbody>
+        </table>
+    {/if}
+
+    <h4>Лог последних звонков клиента</h4>
+    <table class="worktable" width="60%">
+        <tr>
+            <th>Номер телефона или id звонка</th>
+            <th>Дата звонка</th>
+            <th>Принял</th>
+        </tr>
+        {if !empty($data.ats_calls) && count($data.ats_calls)}
+            {foreach $data.ats_calls as $row}
+                <tr>
+                    <td align="center"><a target="_blank"
+                                          href="http://ats.karelia.pro/admin/config.php?display=cdr&action=cel_show&uid={$row.uniqueid}">{if !empty($row.phone)}{$row.phone}{else}{$row.uniqueid}{/if}</a>
+                    </td>
+                    <td>{$row.call_date}</td>
+                    <td>{$row.login}</td>
+                </tr>
+            {/foreach}
+        {else}
+            <tr class="catside">
+                <td colspan="3">Не найдено.</td>
+            </tr>
+        {/if}
+    </table>
+
+
+    {if $data.provider == 'citylink'}
+        <h4><span class="js-link" id="last_sms_show">Лог последних SMS-оповещений</span></h4>
+        <hr width="90%" style="color: #6C9DD9;" id="last_sms_line">
+        <table class="worktable" width="90%" id="last_sms_table">
+            <tr>
+                <th>Описание</th>
+                <th>Дата</th>
+                <th>Статус</th>
+            </tr>
+            <tbody id="last_sms_tbody">
+            <tr class="catside">
+                <td colspan="3"><img src="/work/images/loading_bar.gif"></td>
+            </tr>
+            </tbody>
+        </table>
+        <span class="js-link"
+              onClick="MyWindow=window.open('/work/smsinformer/sendsms.php?default={if (isset($data.sms_phone))}{$data.sms_phone}{elseif isset($data.info.phone_best)}{$data.info.phone_best}{/if}&gateway=tele2','MyWindow','resizable,width=600,height=300'); return false;">Отправить SMS</span>
+        [
+        <span title="Используйте для отправки Клиентам коротких инструкций, кодов и проверки доставки СМС-сообщений. Сообщение при этом попадет в общий смс-лог, но оповещениях пользователя отображаться не будет."
+              class="js-link">?</span>
+        ]
+    {/if}
+
+
+    <h4>Лог оповещений 2.0</h4>
+
+    <table class="worktable" width="90%">
+        <tr>
+            <th>Сервис</th>
+            <th>Контакт</th>
+            <th>Данные</th>
+            <th>Дата</th>
+        </tr>
+        {if count($data.notifications)}
+            {foreach $data.notifications as $notification}
+                <tr class="catside">
+                    <td>{$notification.service}</td>
+                    <td>{$notification.contact}</td>
+                    <td>{$notification.text nofilter}</td>
+                    <td>{$notification.created_at}</td>
+                </tr>
+            {/foreach}
+        {else}
+            <tr class="catside">
+                <td colspan="5"><span style="color: gray;">Нет данных</span></td>
+            </tr>
+        {/if}
+    </table>
+
+    <h4><a name="ap"></a>Лог Автоплатежей</h4>
+    <table class="worktable" width="90%" {if !$data.MSIE}id="table_autopay"{/if}>
+        <thead>
+        <tr>
+            <th>Дата</th>
+            <th>Операция</th>
+            <th>Сумма</th>
+            <th>Номер карты</th>
+            <th>Код авторизации</th>
+        </tr>
+        </thead>
+        {if !empty($client_auto_payment) && $client_auto_payment->log}
+            <tbody id="autopay_tbody">
+            {foreach $client_auto_payment->log as $row}
+                <tr class="autopay-log">
+                    <td align="center">{$row->date_added}</td>
+                    <td>{$row->name}</td>
+                    <td>{$row->amount}</td>
+                    <td>{$row->masked_pan}</td>
+                    <td>{$row->approval_code}</td>
+                </tr>
+            {/foreach}
+            </tbody>
+        {else}
+            <tr class="catside">
+                <td colspan="5"><span style="color: gray;">Нет данных</span></td>
+            </tr>
+        {/if}
+    </table>
+
+
+    {if !$data.MSIE}
+        {if !empty($client_auto_payment) && $client_auto_payment->log}
+            <center>
+                <div id="pager_autopay" class="pager">
+                    <form class="pager-form">
+                        <img src="./js/pager/icons/first.png" class="first"><img src="./js/pager/icons/prev.png"
+                                                                                 class="prev">
+                        <input type="text" class="pagedisplay" disabled>
+                        <img src="./js/pager/icons/next.png" class="next"><img src="./js/pager/icons/last.png"
+                                                                               class="last">
+                        <input type="hidden" class="pagesize" value="20" id="autopay_size">
+                    </form>
+                </div>
+            </center>
+        {/if}
+    {/if}
+
+
+    <h4><a name="log" style="text-decoration: none">Лог событий:</a></h4> (<span class="js-link" id="add_inner_msg">Добавить сообщение</span>) {include 'inner_msg_form.tpl'}
+    <!-- Тут будет фильтр по изменению сообщений.-->
+    <label for="">Поск по событиям</label>
+    <input type="text" name="eventSeach" id="eventSeach">
+    <input type="button" id="buttonSeach" name="buttonSeach" value="Поиск по событиям">
+    <input type="button" id="resetSeach" name="resetSeach" value="Сбросить поиск" hidden="true">
+
+
+    <div class="loading" id="loadingImage" hidden="true">
+        Идёт поиск...
+    </div>
+    <table class="worktable paginated" id="dynamic_field" width="90%">
+
+    </table>
+
+    <script>
+        var typingTimer;                //timer identifier
+        var doneTypingInterval = 5000;  //time in ms, 5 second for example
+
+        /*
+                $('input[name=eventSeach]').keyup(function (eventObject) {
+                    clearTimeout(typingTimer);
+                    typingTimer = setTimeout(doneTyping, doneTypingInterval);
+                });
+        */
+        $('#buttonSeach').click(function (eventObject) {
+            console.log('click');
+            doneTyping();
+        });
+
+        $('#resetSeach').click(function (eventObject) {
+            document.getElementById("table_events").hidden = false;
+            console.log("empty seach");
+            /*   document.getElementsByName("dynamic_field").hidden = true;*/
+            $("#dynamic_field").prop("hidden", true);
+            $("#eventSeach").prop("disabled", false);
+            document.getElementById("resetSeach").hidden = true;
+            document.getElementById("pagesScroll").hidden = false;
+        });
+
+        function attach(id) {
+            var message = 'Прикрепить сообщение?';
+            if (!confirm(message)) {
+                return;
+            }
+            console.log(id);
+            var data ={};
+            data.id = id;
+            data.action = "attach";
+            $.ajax(
+                {
+                    type: 'POST',
+                    url: './attach.php',
+                    data,
+                    success: function () {
+                        doneTyping();
+                    }
+                }
+            );
+            doneTyping();
+        }
+
+        function detach(id) {
+            var message = 'Открепить сообщение?';
+            if (!confirm(message)) {
+                return;
+            }
+            console.log(id);
+            var data ={};
+            data.id = id;
+            data.action = "detach";
+            $.ajax(
+                {
+                    type: 'POST',
+                    url: './attach.php',
+                    data,
+                    success: function (msg) {
+                        if (msg == "ok") {
+                            doneTyping();
+                        } else {
+                            alert("Не удалось прикрепить сообщение");
+                        }
+                    }
+
+                }
+            );
+            doneTyping();
+        }
+
+        function doneTyping() {
+            document.getElementById("buttonSeach").enable = false;
+            document.getElementById("buttonSeach").hidden = true;
+            document.getElementById("resetSeach").hidden = false;
+            document.getElementById("loadingImage").hidden = false;
+            var input = $('#eventSeach');
+            var seach = input.val();
+            var data = {};
+            data.seach = seach;
+            var inputUser = $('#user');
+            var user = inputUser.val();
+            console.log(user);
+            data.user = user;
+            var table = document.getElementById("dynamic_field");
+            var oldTable = document.getElementById("table_events");
+            $("#eventSeach").prop("disabled", true);
+            if (seach != '') {
+                document.getElementById("table_events").hidden = true;
+                $.ajax({
+                    type: 'POST',
+                    url: './seach.php',
+                    data,
+                    success: function (msg) {
+                        document.getElementById("pagesScroll").hidden = true;
+                        table.innerHTML = "";
+                        document.getElementById("loadingImage").hidden = true;
+                        document.getElementById("buttonSeach").hidden = false;
+                        $("#dynamic_field").prop("hidden", false);
+                        $("#eventSeach").prop("disabled", false);
+                        document.getElementById("table_events").hidden = true;
+                        /*  oldTable.innerHTML = "";*/
+                        $('#dynamic_field').append('<tr>' +
+                            '<th width="50px">#</th>' +
+                            '<th width="150px">Дата</th>' +
+                            '<th>Событие</th>' +
+                            '<th>Отправил</th>');
+                        $.each(msg, function (i, item) {
+                            if (item.pinned == "0" && item.type == "Внутреннее сообщение" && item.support != "profile") {
+                                $('#dynamic_field').append('<tr id="row">' +
+                                    '<tr    class="inner-msg"><td>' + item.id + '<td>' + item.date + '</td><td><b>' + item.type + '' + '</b><br>' +
+                                    item.description + '<br>' + '<span  class="js-link pin"   title="Нажмите, чтоб прикрепить на видное место." onclick="attach(' + item.id + ')">Прикрепить</span> ' + '<td>' + item.support + '(' + item.ipaddr + ')' + '</td>' + '<tr>');
+                            } else if (item.pinned == "1" && item.type == "Внутреннее сообщение" && item.support != "profile") {
+                                $('#dynamic_field').append('<tr id="row">' +
+                                    '<tr    class="inner-msg"><td>' + item.id + '<td>' + item.date + '</td><td><b>' + item.type + '' + '</b><br>' +
+                                    item.description + '<br>' + '<span  class="js-link pin" onclick="detach(' + item.id + ')">Открепить</span> ' + '<td>' + item.support + '(' + item.ipaddr + ')' + '</td>' + '<tr>');
+                            } else if (item.pinned == "profile" && item.support != "profile") {
+                                $('#dynamic_field').append('<tr id="row">' +
+                                    '<tr    class="client-log"><td>' + item.id + '<td>' + item.date + '</td><td><b>' + item.type + '' + '</b><br>' +
+                                    item.description + '<span  class="js-link pin" onclick="detach(' + item.id + ')">Открепить</span> ' + '<td>' + item.support + '(' + item.ipaddr + ')' + '</td>' + '<tr>');
+                            } else if (item.source == "iptvportal" && item.support != "profile") {
+                                $('#dynamic_field').append('<tr id="row">' +
+                                    '<tr    class="orange"><td>' + item.id + '<td>' + item.date + '</td><td><b>' + item.type + '' + '</b><br>' +
+                                    item.description + '<span  class="js-link pin" onclick="detach(' + item.id + ')">Открепить</span> ' + '<td>' + item.support + '(' + item.ipaddr + ')' + '</td>' + '<tr>');
+                            } else if (item.support == "profile") {
+                                $('#dynamic_field').append('<tr id="row">' +
+                                    '<tr    class="client-log"><td>' + item.id + '<td>' + item.date + '</td><td><b>' +
+                                    item.description + '</b>' + '<td>' +'клиент' + '(' + item.ipaddr + ')' + '</td>' + '<tr>');
+                            }
+                            else {
+                                $('#dynamic_field').append('<tr id="row">' +
+                                    '<tr     class="zebra"><td>' + item.id + '<td>' + item.date + '</td><td><b>' + item.type + '</b><br>' + item.description + '<td>' + item.support + '(' + item.ipaddr + ')' + '</td>' + '<tr>');
+                            }
+                        });
+                    }
+                });
+            } else {
+                document.getElementById("table_events").hidden = false;
+                document.getElementById("pagesScroll").hidden = false;
+                document.getElementById("loadingImage").hidden = true;
+
+                console.log("empty seach");
+                /*   document.getElementsByName("dynamic_field").hidden = true;*/
+                $("#dynamic_field").prop("hidden", true);
+
+                $("#eventSeach").prop("disabled", false);
+            }
+
+        }
+    </script>
+
+
+    <table class="worktable paginated" {if !$data.MSIE}id="table_events"{/if} width="90%" id="myTable">
+        <thead>
+        <tr>
+            <th width="50px">#</th>
+            <th width="150px">Дата</th>
+            <th>Событие</th>
+            <th>Отправил</th>
+            {if $config.access.delete_event}
+                <th>Удаление</th>
+            {/if}
+        </tr>
+        </thead>
+        {if isset($data.events) && count($data.events)}
+            <tbody>
+            {foreach $data.events as $key => $value}
+                <tr {if $value.source === 'profile'}
+                    class="client-log"
+                        {elseif $value.source === 'iptvportal'}
+                    class="orange"
+                        {elseif $value.type == 'Внутреннее сообщение'}
+                    class="inner-msg"
+                        {elseif $key%2}
+                    class="zebra"
+                        {/if}>
+                    <td align="center">{$value.id}</td>
+                    <td>{date('Y-m-d H:i:s', $value.date)}</td>
+                    <td>
+                        <table width="100%">
+                            <tr>
+                                <td>
+                                    {if $value.type != $value.description}
+                                        {if !empty($data.info.contract_id) && !empty($value.stats_log_type_id) && $value.stats_log_type_id == 38}
+                                            <b><a href="/work/users_feedback/?contract_id={$data.info.contract_id}"
+                                                  target="_blank">{$value.type}</a></b>
+                                            <br>
+                                        {else}
+                                            {if $value.log_type != 'support' && $value.type == 'Включение интернета на 20 минут'}
+                                                <b>Клиент нажал на кнопку "Оплатить", интернет подключен на 20 минут</b>
+                                                <br>
+                                            {else}
+                                                <b>{$value.type}</b>
+                                                <br>
+                                            {/if}
+                                        {/if}
+                                    {/if}
+                                    {nl2br($value.description) nofilter}
+                                </td>
+                                <td align="right">
+                                    {if $value.type == 'Внутреннее сообщение' || $value.type == 'Состояние абонентского оборудования'}
+                                        <span
+                                                {if $value.pinned}
+                                                    title="Нажмите если запись не актуальна, и она не будет отображаться на видных местах."
+                                                {else}
+                                                    title="Нажмите, чтоб прикрепить на видное место."
+                                                {/if}
+                                                class="js-link pin" data-id="{$value.id}" data-pinned="{$value.pinned}">
+								{if $value.pinned}открепить{else}прикрепить{/if}
+							</span>
+                                    {/if}
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                    <td>
+                        {$value.support}
+                        {if $value.source === 'iptvportal'}
+                            <b>из iptv-портала</b>
+                        {/if}
+                    </td>
+                    {if $config.access.delete_event}
+                        <td align="center">{if $value.log_type == 'support'}<span class="js-link delete_event"
+                                                                                  id="{$value.id}">
+                                    Уничтожить</span>{else}-{/if}</td>
+                    {/if}
+                </tr>
+            {/foreach}
+            </tbody>
+        {else}
+            <tr class="catside">
+                <td colspan="5">Записей не найдено.</td>
+            </tr>
+        {/if}
+    </table>
+
+    <div class="loading" id="pagesScroll">
+        {if !$data.MSIE}
+            {if isset($data.events) && count($data.events)}
+                <center>
+                    <div id="pager_events" class="pager">
+                        <form class="pager-form">
+                            <img src="./js/pager/icons/first.png" class="first"><img src="./js/pager/icons/prev.png"
+                                                                                     class="prev">
+                            <input type="text" class="pagedisplay" disabled>
+                            <img src="./js/pager/icons/next.png" class="next"><img src="./js/pager/icons/last.png"
+                                                                                   class="last">
+                            <input type="hidden" class="pagesize" value="20" id="events_size">
+                        </form>
+                    </div>
+                </center>
+            {/if}
+        {/if}
+    </div>
+
+    <h4><span class="js-link" id="checklist_show"><a name="speedtest" style="text-decoration: none">Чек лист выполненных работ при регистрации</a></span>
+    </h4>
+    <hr width="60%" style="color: #6C9DD9;" id="checklist_line">
+    <div id="checklist" style="display: none">
+        <span style="color: gray;"><small>параметры доступны через 2-3 дня после регистрации из-за особенностей сбора логов cnstart</small></span>
+        <table class="worktable" width="40%" id="checklist_table">
+            <tr>
+                <th>Параметр</th>
+                <th>Значение</th>
+            </tr>
+            <tbody>
+            {foreach $data.checklist as $key => $value}
+                <tr class="catside">
+                    <td>{$key}</td>
+                    <td>{if $value}{$value}{else}<span style="color: gray;">нет данных</span>{/if}</td>
+                </tr>
+            {/foreach}
+            </tbody>
+        </table>
+        <span style="color: gray;"><small>Эти замеры скорости выполнены сотрудником, который регистрировал учётную запись:</small></span>
+        <table class="worktable" width="60%" id="speedtest_table">
+            <tr>
+                <th>#</th>
+                <th nowrap>В момент рег.</th>
+                <th>Минимальная</th>
+                <th>Максимальная</th>
+                <th>Последнее</th>
+            </tr>
+            <tbody id="speedtest_tbody">
+            <tr class="catside">
+                <td colspan="5"><img src="/work/images/loading_bar.gif"></td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+</center>
+
+<div class="hidden client-del1">
+    {if $data.info.payment < 0}
+        <div class="cd-content" style="padding: 15px; text-align: center;">
+            <h3 class="red" style="margin-top: 0px; font-weight: normal;">Для расторжения необходимо погасить
+                задолжность: <b>{$data.info.payment} руб.</b></h3>
+        </div>
+    {/if}
+    <div class="cd-content" style="padding: 15px">
+        <p>Если Клиент прислал в электронном виде заявление на расторжение и скан 1-го разворота паспорта,
+            а также нет долгов, то создать запись и сразу удалить учётку.
+            <br>Если Клиент просто попросил расторгнуть договор,
+            нет долгов и прислать всё необходимое он не может,
+            то нажмите "Создать запись на расторжение",
+            расторгнем через 6 месяцев в одностороннем порядке.</p>
+        <div><textarea placeholder="Причина расторжения" class="del-reason" rows="5" autofocus></textarea></div>
+        <div class="w100" style="margin-top: 20px;">
+            <center><input type="button" value="Создать запись на расторжение" class="del2-button" data-type="1"> <input
+                        type="button" value="Отмена" class="cancel"></center>
+        </div>
+    </div>
+</div>
+
+<div class="hidden client-del2">
+    {if $data.info.payment < 0}
+        <div class="cd-content" style="padding: 15px; text-align: center;">
+            <h3 class="red" style="margin-top: 0px; font-weight: normal;">Для расторжения необходимо погасить
+                задолжность: <b>{$data.info.payment} руб.</b></h3>
+        </div>
+    {/if}
+
+    <div class="cd-content" style="padding: 15px">
+        <h3 style="margin-top: 0px; ">Клиент желает расторгнуть договор, отработать на удержание не получилось. Запись
+            будет передана в КО.</h3>
+        <div style="margin-top: 20px;">Причина расторжения:</div>
+        <div><textarea class="del-reason" rows="5" autofocus></textarea></div>
+        <div class="w100" style="margin-top: 20px;">
+            <center><input type="button" value="Передать в КО для удержания" class="del2-button" data-type="2"> <input
+                        type="button" value="Отмена" class="cancel"></center>
+        </div>
+    </div>
+</div>
+<input id="modal_have_specialist" style="display: none;" value="{$data.modal_have_task}">
+<div id="modal_content_special" class="yellow-window"
+     style="text-align: center; display: none; width: 500px; padding: 20px 10px 20px 20px; ">
+    <div>
+        <b><span style="color: red; font-size: 14pt;">У клиента имеются незакрытые проблемы.</span><br><br>
+            Обязательно попытайтесь их решить и оставьте комментарий о том, что было сделано для решения.</b>
+    </div>
+
+    <div class="w100"><a href="/work/support/support/?module=user&user=<?= $nickname ?>" target="_blank">Перейти к
+            проблемам</a></div>
+    <div class="w100" style="margin-top: 30px;"><input type="button" style="cursor: pointer;" id="modal_close"
+                                                       value="Продолжить"></div>
+</div>
+
+<script>
+    $('span.pin').on('click', function () {
+        if ($(this).attr("data-pinned") == 1) {
+            var message = 'Убрать это сообщение с главной страницы договора? Cообщение останется в логах по клиенту.';
+            if (!confirm(message)) {
+                return;
+            }
+            $.post('/work2/ajax/unpin/' + $(this).attr("data-id"), {}, function (json) {
+                if (json.result != 'ok') {
+                    alert("Не удалось открепить сообщение");
+                } else {
+                    window.location.reload();
+                }
+            }, 'json');
+        } else {
+            var message = 'Прикрепить сообщение?';
+            if (!confirm(message)) {
+                return;
+            }
+            $.post('/work2/ajax/pin/' + $(this).attr("data-id"), {}, function (json) {
+                if (json.result != 'ok') {
+                    alert("Не удалось прикрепить сообщение");
+                } else {
+                    window.location.reload();
+                }
+            }, 'json');
+        }
+    });
+</script>
